@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Room</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        #top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+        }
+        #logout {
+            background-color: red;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+        #chat-box {
+            width: 50%;
+            height: 300px;
+            border: 1px solid black;
+            overflow-y: scroll;
+            padding: 10px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Top Bar -->
+    <div id="top-bar">
+        <h3>Welcome, <span id="logged-in-user"></span></h3>
+        <button id="logout">Logout</button>
+    </div>
+
+    <h2>Welcome to the Chat Room</h2>
+
+    <label for="room">Choose Room:</label>
+    <select id="room">
+        <option value="devops">DevOps</option>
+        <option value="cloud">Cloud Computing</option>
+        <option value="nodejs">NodeJS</option>
+        <option value="nodejs">Covid19</option>
+        <option value="nodejs">Sports</option>
+    </select>
+    <button id="joinRoom">Join</button>
+
+    <h3>Chat Messages</h3>
+    <div id="chat-box"></div>
+
+    <input type="text" id="message" placeholder="Type a message...">
+    <button id="send">Send</button>
+    <p id="typing"></p>
+
+    <script>
+        const socket = io();
+        let username = localStorage.getItem("username"); 
+        let room = "";
+
+        // Redirect to login if user is not authenticated
+        if (!username) {
+            alert("You must log in first!");
+            window.location.href = "/login";
+        } else {
+            document.getElementById("logged-in-user").textContent = username;
+        }
+
+        // Logout
+        document.getElementById("logout").addEventListener("click", function () {
+            localStorage.removeItem("token"); 
+            localStorage.removeItem("username"); 
+            alert("Logged out successfully!");
+            window.location.href = "/login"; 
+        });
+
+        // Join Room
+        document.getElementById("joinRoom").addEventListener("click", function () {
+            room = document.getElementById("room").value;
+            socket.emit("joinRoom", { username, room });
+            document.getElementById("chat-box").innerHTML += `<p><strong>${username}</strong> joined ${room}</p>`;
+        });
+
+        // Send Message
+        document.getElementById("send").addEventListener("click", function () {
+            const message = document.getElementById("message").value;
+            if (message.trim() !== "" && room !== "") {
+                socket.emit("chatMessage", { username, room, message });
+                document.getElementById("message").value = "";
+            }
+        });
+
+        // Receive Messages
+        socket.on("message", (data) => {
+            document.getElementById("chat-box").innerHTML += `<p><strong>${data.from_user}:</strong> ${data.message} <small>(${data.date_sent})</small></p>`;
+        });
+
+        // Typing Indicator
+        document.getElementById("message").addEventListener("keypress", function () {
+            socket.emit("typing", { username, room });
+        });
+
+        socket.on("typing", (user) => {
+            document.getElementById("typing").textContent = `${user} is typing...`;
+            setTimeout(() => document.getElementById("typing").textContent = "", 2000);
+        });
+    </script>
+
+</body>
+</html>

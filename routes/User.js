@@ -25,9 +25,14 @@ router.post("/signup", async(req,res)=>{
         
         await user.save()
 
-        res.status(201).send(user)
+        res.status(201).json({
+            success: true,
+            message: "Signup successful! Redirect to login",
+            user
+        })
     }catch(e){
         res.status(500).json({
+            success: false,
             message: "unable to register",
             error: e.message
         })
@@ -56,7 +61,9 @@ router.post("/login", async(req, res)=>{
         )
 
         res.status(200).json({
-            message: `Welcome ${user.firstname}`,
+            success: true,
+            message: `Login successful! Welcome ${user.firstname}`,
+            username: user.username,
             profile: {
                 username: user.username,
                 firstname: user.firstname,
@@ -66,6 +73,7 @@ router.post("/login", async(req, res)=>{
         })
     }catch(e){
         res.status(500).json({
+            success: false,
             message: "unable to login",
             error: e.message
         })

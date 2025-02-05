@@ -20,11 +20,23 @@
     <script>
         $("#signupForm").submit(function (event) {
             event.preventDefault();
-            $.post("/api/auth/signup", {
-                username: $("#username").val(),
-                firstname: $("#firstname").val(),
-                lastname: $("#lastname").val(),
-                password: $("#password").val()
+            $.ajax({
+                url: "/user/signup",
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify({
+                    username: $("#username").val(),
+                    firstname: $("#firstname").val(),
+                    lastname: $("#lastname").val(),
+                    password: $("#password").val()
+                }),
+                success: function (response) {
+                    alert(response.message);
+                    window.location.href = "/login";
+                },
+                error: function (xhr) {
+                    $("#message").text(xhr.responseJSON.message).css("color", "red");
+                }
             });
         });
     </script>

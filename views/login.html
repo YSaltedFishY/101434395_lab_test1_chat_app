@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
+
 <body>
     <h2>Login</h2>
     <form id="loginForm">
@@ -16,17 +18,31 @@
     <p id="message"></p>
 
     <script>
-        $("#loginForm").submit(function (event) {
-            event.preventDefault();
-            $.post("/api/auth/login", {
-                username: $("#username").val(),
-                password: $("#password").val()
-            }, function (data) {
-                localStorage.setItem("token", data.token);
-                localStorage.setItem("username", data.username);
-                window.location.href = "/chat.html";
+        $(document).ready(function () {
+            $("#loginForm").submit(function (event) {
+                event.preventDefault();
+
+                $.ajax({
+                    url: "/user/login",
+                    type: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify({
+                        username: $("#username").val(),
+                        password: $("#password").val()
+                    }),
+                    success: function (response) {
+                        alert(response.message);
+                        localStorage.setItem("token", response.token);
+                        localStorage.setItem("username", response.username);
+                        window.location.href = "/chat";
+                    },
+                    error: function (xhr) {
+                        $("#message").text(xhr.responseJSON.message).css("color", "red");
+                    }
+                })
             });
         });
     </script>
 </body>
+
 </html>
