@@ -13,6 +13,8 @@ const SERVER_PORT = process.env.PORT || 3000
 const app = express();
 app.use(express.json()); // Make sure it comes back as json
 app.use(express.urlencoded({ extended: true }));
+app.use(express.static('views'));
+
 
 
 const { Server } = require('socket.io')
@@ -55,13 +57,15 @@ app.get("/private", (req, res) => {
 })
 
 let users = {}
+let usersInRoom = {}
 
 io.on("connection", (socket)=>{
     console.log(`User ${socket.id} has been connected`)
 
     socket.on("joinRoom", async ({username, room})=>{
         socket.join(room)
-        users[socket.id] = {username, room}
+        usersInRoom[socket.id] = { username, room };
+        // users[socket.id] = {username, room}
 
         console.log(`${username} has joined ${room}`)
 
@@ -72,6 +76,8 @@ io.on("connection", (socket)=>{
         }catch(e){
             console.error("Error fetching logs", e)
         }
+
+        io.to(room).emit("userList", getUsersInRoom(room));
 
         io.to(room).emit("message", {
             from_user: room,
@@ -100,13 +106,17 @@ io.on("connection", (socket)=>{
     });
 
     socket.on("leaveRoom", () => {
-        let { username, room } = users[socket.id] || {};
+        let { username, room } = usersInRoom[socket.id] || {}; // ✅ Fix: Use usersInRoom
         if (room) {
             socket.leave(room);
-            delete users[socket.id]; 
-            
+            delete usersInRoom[socket.id]; // ✅ Remove user from room tracking
+    
+            // ✅ Emit updated user list to the remaining users
+            io.to(room).emit("userList", getUsersInRoom(room));
+    
+            // ✅ Notify other users in chat
             io.to(room).emit("message", {
-                from_user: room,
+                from_user: "System",
                 message: `${username} has left the chat`,
                 date_sent: new Date().toISOString(),
             });
@@ -128,6 +138,12 @@ io.on("connection", (socket)=>{
             })
         }
     })
+
+    function getUsersInRoom(room) {
+        return Object.values(usersInRoom)
+            .filter(user => user.room === room)
+            .map(user => user.username);
+    }
 
     //1 on 1 chat
 
