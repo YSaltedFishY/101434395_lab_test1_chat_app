@@ -50,16 +50,29 @@ app.get("/chat", (req, res) => {
     res.sendFile(path.join(__dirname, 'views', 'chat.html'))
 })
 
+app.get("/private", (req, res) => {
+    res.sendFile(path.join(__dirname, 'views', 'privateChat.html'))
+})
+
 let users = {}
 
 io.on("connection", (socket)=>{
     console.log(`User ${socket.id} has been connected`)
 
-    socket.on("joinRoom",({username, room})=>{
+    socket.on("joinRoom", async ({username, room})=>{
         socket.join(room)
         users[socket.id] = {username, room}
 
         console.log(`${username} has joined ${room}`)
+
+        try{
+            const chatLog = await GroupMessage.find({room}).sort({time: 1})
+            // console.log(chatLog)
+            socket.emit("previousMessages", chatLog)
+        }catch(e){
+            console.error("Error fetching logs", e)
+        }
+
     })
 
     socket.on("chatMessage", async({username, room, message})=>{
@@ -92,6 +105,10 @@ io.on("connection", (socket)=>{
             })
         }
     })
+
+    //1 on 1 chat
+
+    
 
 })
 

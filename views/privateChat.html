@@ -45,38 +45,22 @@
     <!-- Top Bar -->
     <div id="top-bar">
         <h3>Welcome, <span id="logged-in-user"></span></h3>
-        <button id="privateChat">privateChat</button>
+        <button id="groupChat">GroupChat</button>
         <button id="logout">Logout</button>
     </div>
 
     <h2>Welcome to the Chat Room</h2>
 
-    <label for="room">Choose Room:</label>
-    <select id="room">
-        <option value="devops">DevOps</option>
-        <option value="cloud">Cloud Computing</option>
-        <option value="nodejs">NodeJS</option>
-        <option value="Covid19">Covid19</option>
-        <option value="Sports">Sports</option>
-    </select>
-    <button id="joinRoom">Join</button>
-    <button id="leave-room">Leave Room</button>
+    <label for="room">Send Message to user:</label>
+    <input type="text" id="receiver" name="ruser">
+    <button id="select">Select</button>
 
-    <h3>Chat Messages</h3>
+    <h3 id="H3Receive">Messaging to</h3>
     <div id="chat-box"></div>
-
-    <div>
-        <h3>Current Users</h3>
-        <ul id="user-list"></ul>
-    </div>
 
     <input type="text" id="message" placeholder="Type a message...">
     <button id="send">Send</button>
     <p id="typing"></p>
-
-
-
-
 
     <script>
         const socket = io();
@@ -91,6 +75,11 @@
             document.getElementById("logged-in-user").textContent = username;
         }
 
+        document.getElementById("select").addEventListener("click", function () {
+            let username2 = document.getElementById("receiver").value
+            document.getElementById("H3Receive").innerHTML = `Messaging to ${username2}`;
+        });
+
         // Logout
         document.getElementById("logout").addEventListener("click", function () {
             localStorage.removeItem("token");
@@ -99,8 +88,9 @@
             window.location.href = "/login";
         });
 
-        document.getElementById("privateChat").addEventListener("click", function () {
-            window.location.href = "/private";
+        // Swap
+        document.getElementById("groupChat").addEventListener("click", function () {
+            window.location.href = "/chat";
         });
 
         // Join Room
