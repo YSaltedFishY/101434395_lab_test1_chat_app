@@ -45,22 +45,23 @@
     <!-- Top Bar -->
     <div id="top-bar">
         <h3>Welcome, <span id="logged-in-user"></span></h3>
+        <label for="room">Choose Room:</label>
+        <select id="room">
+            <option value="devops">DevOps</option>
+            <option value="cloud">Cloud Computing</option>
+            <option value="nodejs">NodeJS</option>
+            <option value="Covid19">Covid19</option>
+            <option value="Sports">Sports</option>
+        </select>
+        <button id="joinRoom">Join</button>
+        <button id="leave-room">Leave Room</button>
         <button id="privateChat">privateChat</button>
         <button id="logout">Logout</button>
     </div>
 
     <h2>Welcome to the Chat Room</h2>
 
-    <label for="room">Choose Room:</label>
-    <select id="room">
-        <option value="devops">DevOps</option>
-        <option value="cloud">Cloud Computing</option>
-        <option value="nodejs">NodeJS</option>
-        <option value="Covid19">Covid19</option>
-        <option value="Sports">Sports</option>
-    </select>
-    <button id="joinRoom">Join</button>
-    <button id="leave-room">Leave Room</button>
+
 
     <h3>Chat Messages</h3>
     <div id="chat-box"></div>
@@ -100,14 +101,14 @@
         });
 
         document.getElementById("privateChat").addEventListener("click", function () {
-            window.location.href = "/private";
+            window.location.href = "/privateChat";
         });
 
         // Join Room
         document.getElementById("joinRoom").addEventListener("click", function () {
             room = document.getElementById("room").value;
             socket.emit("joinRoom", { username, room });
-            
+
             //clear on new room join
             document.getElementById("chat-box").innerHTML = "";
 
@@ -148,10 +149,11 @@
         });
 
         document.getElementById("leave-room").addEventListener("click", function () {
-            socket.emit("leaveRoom", username, room);
-            document.getElementById("chat-box").innerHTML = ""; 
-            document.getElementById("user-list").innerHTML = ""; 
-            currentRoom = "";
+            socket.emit("leaveRoom");
+
+            setTimeout(() => {
+                document.getElementById("chat-box").innerHTML = "";
+            }, 2000);
         });
 
 

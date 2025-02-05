@@ -73,6 +73,12 @@ io.on("connection", (socket)=>{
             console.error("Error fetching logs", e)
         }
 
+        io.to(room).emit("message", {
+            from_user: room,
+            message: `${username} has join the chat`,
+            date_sent: new Date().toISOString(),
+        });
+
     })
 
     socket.on("chatMessage", async({username, room, message})=>{
@@ -92,6 +98,23 @@ io.on("connection", (socket)=>{
     socket.on("typing", ({ username, room }) => {
         socket.to(room).emit("typing", username);
     });
+
+    socket.on("leaveRoom", () => {
+        let { username, room } = users[socket.id] || {};
+        if (room) {
+            socket.leave(room);
+            delete users[socket.id]; 
+            
+            io.to(room).emit("message", {
+                from_user: room,
+                message: `${username} has left the chat`,
+                date_sent: new Date().toISOString(),
+            });
+    
+            console.log(`${username} left ${room}`);
+        }
+    });
+    
 
     socket.on("disconnect", ()=>{
         if(users[socket.id]){
