@@ -5,17 +5,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Signup</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="./css/signup.css">
 </head>
 <body>
-    <h2>Signup</h2>
-    <form id="signupForm">
-        <input type="text" id="username" placeholder="Username" required><br>
-        <input type="text" id="firstname" placeholder="First Name" required><br>
-        <input type="text" id="lastname" placeholder="Last Name" required><br>
-        <input type="password" id="password" placeholder="Password" required><br>
-        <button type="submit">Signup</button>
-    </form>
-    <p id="message"></p>
+
+    <div class="signup-container">
+        <h2>Signup</h2>
+        <form id="signupForm">
+            <label for="username">Username:</label>
+            <input type="text" id="username" placeholder="Username" required>
+
+            <label for="firstname">First Name:</label>
+            <input type="text" id="firstname" placeholder="First Name" required>
+
+            <label for="lastname">Last Name:</label>
+            <input type="text" id="lastname" placeholder="Last Name" required>
+
+            <label for="password">Password:</label>
+            <input type="password" id="password" placeholder="Password" required>
+
+            <div class="button-group">
+                <button type="submit" class="btn-signup">Signup</button>
+                <button type="button" class="btn-login" id="backToLogin">Login</button>
+            </div>
+        </form>
+        <p id="message"></p>
+    </div>
 
     <script>
         $("#signupForm").submit(function (event) {
@@ -37,6 +52,10 @@
                 error: function (xhr) {
                     $("#message").text(xhr.responseJSON.message).css("color", "red");
                 }
+            });
+
+            $("#backToLogin").click(function () {
+                window.location.href = "/login";
             });
         });
     </script>
