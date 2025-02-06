@@ -181,14 +181,13 @@ io.on("connection", (socket)=>{
         try {
             const messages = await PrivateMessage.find({
                 $or: [
-                    { from_user: sender, to_user: receiver },
-                    { from_user: receiver, to_user: sender }
+                    { from_user: { $regex: new RegExp("^" + sender + "$", "i") }, to_user: { $regex: new RegExp("^" + receiver + "$", "i") } },
+                    { from_user: { $regex: new RegExp("^" + receiver + "$", "i") }, to_user: { $regex: new RegExp("^" + sender + "$", "i") } }
                 ]
             }).sort({ date_sent: 1 });
     
+            console.log(`sender: ${sender} | receiver: ${receiver}:`, messages);
             socket.emit("previousPrivateMessages", messages);
-    
-            console.log(`Loaded private chat history for ${sender} to ${receiver}`);
         } catch (error) {
             console.error("Error fetching private messages:", error);
         }
