@@ -93,3 +93,12 @@ body {
     border: none;
     cursor: pointer;
 }
+
+#chat-header {
+    display: flex;
+    align-items: center;
+}
+
+#chat-header h2 {
+    margin-right: 10px;
+}

@@ -29,7 +29,10 @@
         <button id="logout">Logout</button>
     </div>
 
-    <h2>Welcome to the Chat Room</h2>
+    <div id="chat-header">
+        <h2>Welcome to the Chat Room</h2>
+        <p id="typing"></p>
+    </div>
 
 
     <div class="chat-container">
@@ -40,20 +43,22 @@
 
 
         <div class="chat-box-container">
-            <h3>Chat Messages</h3>
+            <h3 id="chat-indicator">Chat Messages</h3>
             <div id="chat-box"></div>
         </div>
+
     </div>
 
     <input type="text" id="message" placeholder="Type a message...">
     <button id="send">Send</button>
-    <p id="typing"></p>
+
 
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             const socket = io();
             let username = localStorage.getItem("username");
             let room = "";
+            let selectedPrivateUser = "";
 
             // Redirect to login if user is not authenticated
             if (!username) {
@@ -64,12 +69,26 @@
             }
 
             socket.on("userList", (users) => {
-                console.log("Updated user list:", users);
                 let userList = document.getElementById("user-list");
-                userList.innerHTML = ""; // ✅ Clear existing list
+                userList.innerHTML = "";
+
                 users.forEach(user => {
                     let li = document.createElement("li");
                     li.textContent = user;
+                    li.classList.add("clickable-user"); 
+                    li.addEventListener("click", function () {
+                        if (selectedPrivateUser === user) {
+                            selectedPrivateUser = ""; 
+                            document.getElementById("chat-box").innerHTML = "";
+                            document.getElementById("chat-indicator").innerHTML = `Chat Messages`;
+                            alert("Switched back to Group Chat");
+                        } else {
+                            selectedPrivateUser = user; 
+                            document.getElementById("chat-box").innerHTML = "";
+                            document.getElementById("chat-indicator").innerHTML = `Chat Messages with ${selectedPrivateUser}`;
+                            alert(`You are now chatting privately with ${user}`);
+                        }
+                    });
                     userList.appendChild(li);
                 });
             });
@@ -100,8 +119,13 @@
             // Send Message
             document.getElementById("send").addEventListener("click", function () {
                 const message = document.getElementById("message").value;
-                if (message.trim() !== "" && room !== "") {
-                    socket.emit("chatMessage", { username, room, message });
+                if (message.trim() !== "") {
+                    if (selectedPrivateUser) {
+                        socket.emit("privateMessage", { sender: username, receiver: selectedPrivateUser, message });
+                        document.getElementById("chat-box").innerHTML += `<p><strong>Me (Private to ${selectedPrivateUser}):</strong> ${message}</p>`;
+                    } else {
+                        socket.emit("chatMessage", { username, room, message });
+                    }
                     document.getElementById("message").value = "";
                 }
             });
@@ -119,6 +143,10 @@
                 });
             });
 
+            socket.on("receivePrivateMessage", (data) => {
+                document.getElementById("chat-box").innerHTML += `<p class="private-message"><strong>${data.sender} (Private):</strong> ${data.message} <small>(${new Date(data.date_sent).toLocaleString()})</small></p>`;
+            });
+
 
             // Typing Indicator
             document.getElementById("message").addEventListener("keypress", function () {
@@ -132,10 +160,10 @@
 
             document.getElementById("leave-room").addEventListener("click", function () {
                 if (room) {
-                    socket.emit("leaveRoom"); 
-            
+                    socket.emit("leaveRoom");
+
                     setTimeout(() => {
-                        document.getElementById("chat-box").innerHTML = ""; 
+                        document.getElementById("chat-box").innerHTML = "";
                         document.getElementById("user-list").innerHTML = "";
                     }, 2000);
                 } else {

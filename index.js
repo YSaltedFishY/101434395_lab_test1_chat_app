@@ -6,6 +6,7 @@ const UserRouter = require('./routes/User')
 const GMRouter = require('./routes/GroupMessage')
 const PMRouter = require('./routes/PrivateMessage')
 const GroupMessage = require('./models/GroupMessage')
+const PrivateMessage = require('./models/PrivateMessage')
 
 require("dotenv").config();
 
@@ -106,15 +107,13 @@ io.on("connection", (socket)=>{
     });
 
     socket.on("leaveRoom", () => {
-        let { username, room } = usersInRoom[socket.id] || {}; // ✅ Fix: Use usersInRoom
+        let { username, room } = usersInRoom[socket.id] || {};
         if (room) {
             socket.leave(room);
-            delete usersInRoom[socket.id]; // ✅ Remove user from room tracking
-    
-            // ✅ Emit updated user list to the remaining users
+            delete usersInRoom[socket.id];
+
             io.to(room).emit("userList", getUsersInRoom(room));
     
-            // ✅ Notify other users in chat
             io.to(room).emit("message", {
                 from_user: "System",
                 message: `${username} has left the chat`,
@@ -147,6 +146,53 @@ io.on("connection", (socket)=>{
 
     //1 on 1 chat
 
+    socket.on("privateMessage", async ({ sender, receiver, message }) => {
+        console.log(`Private message from ${sender} to ${receiver}: ${message}`);
+        try {
+            const newPrivateMessage = new PrivateMessage({
+                from_user: sender,
+                to_user: receiver,
+                message: message,
+            });
+    
+            await newPrivateMessage.save(); 
+    
+            let receiverSocketId = Object.keys(usersInRoom).find(
+                (socketId) => usersInRoom[socketId].username === receiver
+            );
+    
+            if (receiverSocketId) {
+                io.to(receiverSocketId).emit("receivePrivateMessage", {
+                    sender,
+                    message,
+                    date_sent: newPrivateMessage.date_sent,
+                });
+    
+                console.log(`Sent private message to ${receiver}`);
+            } else {
+                console.log(`User ${receiver} not found for private message.`);
+            }
+        } catch (error) {
+            console.error("Error saving private message:", error);
+        }
+    })
+
+    socket.on("loadPrivateMessages", async ({ sender, receiver }) => {
+        try {
+            const messages = await PrivateMessage.find({
+                $or: [
+                    { from_user: sender, to_user: receiver },
+                    { from_user: receiver, to_user: sender }
+                ]
+            }).sort({ date_sent: 1 });
+    
+            socket.emit("previousPrivateMessages", messages);
+    
+            console.log(`Loaded private chat history for ${sender} to ${receiver}`);
+        } catch (error) {
+            console.error("Error fetching private messages:", error);
+        }
+    });
     
 
 })
